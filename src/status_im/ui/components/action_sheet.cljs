@@ -1,7 +1,7 @@
 (ns status-im.ui.components.action-sheet
   (:require [status-im.i18n :as i18n]
             [status-im.utils.utils :as utils]
-            [status-im.react-native.js-dependencies :as rn-dependencies]))
+            [status-im.react-native.js-dependencies :as js-dependencies]))
 
 (defn- callback [options]
   (fn [index]
@@ -17,7 +17,7 @@
                       {:destructiveButtonIndex destructive-opt-index})))))
 
 (defn show [{:keys [title message options callback]}]
-  (.showActionSheetWithOptions (.-ActionSheetIOS rn-dependencies/react-native)
+  (.showActionSheetWithOptions (.-ActionSheetIOS js-dependencies/react-native)
                                (merge (options options)
                                       (when title {:title title})
                                       (when message {:message message}))

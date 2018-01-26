@@ -1,17 +1,13 @@
 (ns status-im.ui.components.carousel.carousel
-  (:require [reagent.impl.component :as rc]
-            [status-im.ui.components.react :refer [view
-                                                scroll-view
-                                                touchable-without-feedback
-                                                text]]
-            [status-im.ui.components.carousel.styles :as st]
+  (:require [reagent.impl.component :as component]
+            [status-im.ui.components.react :as react]
+            [status-im.ui.components.carousel.styles :as styles]
             [taoensso.timbre :as log]
-            [status-im.ui.components.react :as r]
-            [status-im.react-native.js-dependencies :as rn-dependencies]))
+            [status-im.react-native.js-dependencies :as js-dependencies]))
 
 
 (defn window-page-width []
-  (.-width (.get (.. rn-dependencies/react-native -Dimensions) "window")))
+  (.-width (.get (.. js-dependencies/react-native -Dimensions) "window")))
 
 (def defaults {:gap 8
                :sneak 8
@@ -49,14 +45,14 @@
   (get data :scrollThreshold (:scrollThreshold defaults)))
 
 (defn apply-props [component props]
-  (let [sneak (get-sneak props)
+  (let [sneak      (get-sneak props)
         page-width (get-page-width props)
-        style (get-page-style props)
-        gap (quot (- (window-page-width)
-                     (* 2 sneak)
-                     page-width)
-                  2)
-        count (get-count props)]
+        style      (get-page-style props)
+        gap        (quot (- (window-page-width)
+                            (* 2 sneak)
+                            page-width)
+                         2)
+        count      (get-count props)]
     (reagent.core/set-state component {:sneak sneak
                                        :pageWidth page-width
                                        :pageStyle style
@@ -72,22 +68,22 @@
 
 (defn get-page-position [state page]
   (let [page-width (get-page-width state)
-        gap (get-gap state)
-        sneak (get-sneak state)
-        count (get-count state)
-        addition (condp = page
-                   0 gap
-                   (dec count) (- (* 3 gap) (* sneak 2))
-                   (- sneak (* gap 2)))]
+        gap        (get-gap state)
+        sneak      (get-sneak state)
+        count      (get-count state)
+        addition   (condp = page
+                     0 gap
+                     (dec count) (- (* 3 gap) (* sneak 2))
+                     (- sneak (* gap 2)))]
     (+ (* page page-width)
        (* (dec page) gap)
        addition)))
 
 (defn go-to-page [component page]
-  (let [props (reagent.core/props component)
-        state (reagent.core/state component)
-        page-width (get-page-width state)
-        gap (get-gap state)
+  (let [props         (reagent.core/props component)
+        state         (reagent.core/state component)
+        page-width    (get-page-width state)
+        gap           (get-gap state)
         page-position (get-page-position state page)]
     (log/debug "go-to-page: props-page-width=" page-width "; gap=" gap
                "; page-position=" page-position "; page: " page)
@@ -99,17 +95,17 @@
       ((:onPageChange props) page))))
 
 (defn on-scroll-end [event component starting-position]
-  (let [props (reagent.core/props component)
-        state (reagent.core/state component)
+  (let [props            (reagent.core/props component)
+        state            (reagent.core/state component)
         scroll-threshold (get-scroll-threshold props)
-        current-page (get-active-page state)
+        current-page     (get-active-page state)
         current-position (get-current-position event)
-        page-count (get-count state)
-        direction (cond
-                    (> current-position (+ starting-position scroll-threshold)) 1
-                    (< current-position (- starting-position scroll-threshold)) -1
-                    :else 0)
-        new-page (+ current-page direction)]
+        page-count       (get-count state)
+        direction        (cond
+                           (> current-position (+ starting-position scroll-threshold)) 1
+                           (< current-position (- starting-position scroll-threshold)) -1
+                           :else 0)
+        new-page         (+ current-page direction)]
     (log/debug state "on-scroll-end: starting position=" starting-position
                "; current-position=" current-position "; direction=" direction
                "; current-page=" current-page "; new-page=" new-page)
@@ -131,7 +127,7 @@
       (go-to-page component initial-page))))
 
 (defn component-will-receive-props [component new-argv]
-  (let [props (rc/extract-props new-argv)]
+  (let [props (component/extract-props new-argv)]
     (log/debug "component-will-receive-props: props=" props)
     (apply-props component props)))
 
@@ -139,14 +135,14 @@
   (.-width (.-layout (.-nativeEvent event))))
 
 (defn on-layout-change [event component]
-  (let [state (reagent.core/state component)
-        page-width (compute-page-width (get-event-width event)
-                                       (get-gap state)
-                                       (get-sneak state))
+  (let [state            (reagent.core/state component)
+        page-width       (compute-page-width (get-event-width event)
+                                             (get-gap state)
+                                             (get-sneak state))
         state-page-width (get-page-width state)
-        active-page (get-active-page state)
-        gap (get-gap state)
-        page-position (* active-page (+ page-width gap))]
+        active-page      (get-active-page state)
+        gap              (get-gap state)
+        page-position    (* active-page (+ page-width gap))]
     (log/debug "Layout changed: " " page-width=" page-width "; state-page-width=" state-page-width)
     (if (not= page-width state-page-width)
       (do
@@ -157,43 +153,43 @@
 (defn get-pages [component data children]
   (let [page-width (get-page-width data)
         page-style (get-page-style data)
-        gap (get-gap data)
-        count (get-count data)]
+        gap        (get-gap data)
+        count      (get-count data)]
     (doall (map-indexed (fn [index child]
-                   (let [page-index index
-                         touchable-data {:key index
-                                         :onPress #(go-to-page component page-index)}]
-                     [touchable-without-feedback touchable-data
-                      [view {:style [(st/page index count page-width gap)
-                                     page-style]
-                             :onLayout #(log/debug "view onLayout" %)}
+                          (let [page-index     index
+                                touchable-data {:key     index
+                                                :onPress #(go-to-page component page-index)}]
+                            [react/touchable-without-feedback touchable-data
+                             [react/view {:style    [(styles/page index count page-width gap)
+                                                     page-style]
+                                          :onLayout #(log/debug "view onLayout" %)}
 
-                       child]])) children))))
+                              child]])) children))))
 
 (defn reagent-render [data children]
   (let [starting-position (atom 0)
-        component (reagent.core/current-component)
-        state (reagent.core/state component)
-        gap (get-gap state)]
+        component         (reagent.core/current-component)
+        state             (reagent.core/state component)
+        gap               (get-gap state)]
     (log/debug "reagent-render: " data state)
-    [view {:style st/scroll-view-container}
-     [scroll-view {:contentContainerStyle (st/content-container gap)
-                   :automaticallyAdjustContentInsets false
-                   :bounces false
-                   :decelerationRate 0.9
-                   :horizontal true
-                   :onLayout #(on-layout-change % component)
-                   :scrollEnabled (not (get state :scrolling?))
-                   :onScrollBeginDrag #(reset! starting-position (get-current-position %))
-                   :onScrollEndDrag #(on-scroll-end % component @starting-position)
-                   :showsHorizontalScrollIndicator false
-                   :ref #(set! (.-scrollView component) %)}
+    [react/view {:style styles/scroll-view-container}
+     [react/scroll-view {:contentContainerStyle            (styles/content-container gap)
+                         :automaticallyAdjustContentInsets false
+                         :bounces                          false
+                         :decelerationRate                 0.9
+                         :horizontal                       true
+                         :onLayout                         #(on-layout-change % component)
+                         :scrollEnabled                    (not (get state :scrolling?))
+                         :onScrollBeginDrag                #(reset! starting-position (get-current-position %))
+                         :onScrollEndDrag                  #(on-scroll-end % component @starting-position)
+                         :showsHorizontalScrollIndicator   false
+                         :ref                              #(set! (.-scrollView component) %)}
       (get-pages component state children)]]))
 
 (defn carousel [_ _]
-  (let [component-data {:component-did-mount component-did-mount
-                        :component-will-mount component-will-mount
+  (let [component-data {:component-did-mount          component-did-mount
+                        :component-will-mount         component-will-mount
                         :component-will-receive-props component-will-receive-props
-                        :display-name "carousel"
-                        :reagent-render reagent-render}]
+                        :display-name                 "carousel"
+                        :reagent-render               reagent-render}]
     (reagent.core/create-class component-data)))

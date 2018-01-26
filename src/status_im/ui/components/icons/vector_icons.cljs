@@ -4,11 +4,11 @@
             [status-im.utils.platform :as platform]
             [status-im.ui.components.styles :as styles]
             [status-im.ui.components.react :as react]
-            [status-im.react-native.js-dependencies :as rn-dependencies])
+            [status-im.react-native.js-dependencies :as js-dependencies])
   (:refer-clojure :exclude [use]))
 
 (defn get-property [name]
-  (aget rn-dependencies/svg name))
+  (aget js-dependencies/svg name))
 
 (defn adapt-class [class]
   (when class

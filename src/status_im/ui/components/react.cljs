@@ -1,29 +1,29 @@
 (ns status-im.ui.components.react
   (:require-macros [status-im.utils.views :as views])
   (:require [clojure.string :as string]
-            [reagent.core :as r]
-            [status-im.ui.components.styles :as st]
-            [status-im.utils.utils :as u]
-            [status-im.utils.platform :refer [platform-specific ios?]]
+            [reagent.core :as reagent]
+            [status-im.ui.components.styles :as components.styles]
+            [status-im.utils.utils :as utils]
+            [status-im.utils.platform :as platform]
             [status-im.i18n :as i18n]
-            [status-im.react-native.js-dependencies :as rn-dependencies]))
+            [status-im.react-native.js-dependencies :as js-dependencies]))
 
 (defn get-react-property [name]
-  (if rn-dependencies/react-native
-    (aget rn-dependencies/react-native name)
+  (if js-dependencies/react-native
+    (aget js-dependencies/react-native name)
     #js {}))
 
 (defn adapt-class [class]
   (when class
-    (r/adapt-react-class class)))
+    (reagent/adapt-react-class class)))
 
 (defn get-class [name]
   (adapt-class (get-react-property name)))
 
-(def native-modules (.-NativeModules rn-dependencies/react-native))
-(def device-event-emitter (.-DeviceEventEmitter rn-dependencies/react-native))
-(def dismiss-keyboard! rn-dependencies/dismiss-keyboard)
-(def orientation rn-dependencies/orientation)
+(def native-modules (.-NativeModules js-dependencies/react-native))
+(def device-event-emitter (.-DeviceEventEmitter js-dependencies/react-native))
+(def dismiss-keyboard! js-dependencies/dismiss-keyboard)
+(def orientation js-dependencies/orientation)
 (def back-handler (get-react-property "BackHandler"))
 
 (def splash-screen (.-SplashScreen native-modules))
@@ -58,20 +58,20 @@
   (when-let [picker (get-react-property "Picker")]
     (adapt-class (.-Item picker))))
 
-(def pan-responder (.-PanResponder rn-dependencies/react-native))
-(def animated (.-Animated rn-dependencies/react-native))
-(def animated-view (r/adapt-react-class (.-View animated)))
-(def animated-text (r/adapt-react-class (.-Text animated)))
+(def pan-responder (.-PanResponder js-dependencies/react-native))
+(def animated (.-Animated js-dependencies/react-native))
+(def animated-view (reagent/adapt-react-class (.-View animated)))
+(def animated-text (reagent/adapt-react-class (.-Text animated)))
 
-(def dimensions (.-Dimensions rn-dependencies/react-native))
-(def keyboard (.-Keyboard rn-dependencies/react-native))
-(def linking (.-Linking rn-dependencies/react-native))
+(def dimensions (.-Dimensions js-dependencies/react-native))
+(def keyboard (.-Keyboard js-dependencies/react-native))
+(def linking (.-Linking js-dependencies/react-native))
 
 (def slider (get-class "Slider"))
 ;; Accessor methods for React Components
 
 (defn add-font-style [style-key {:keys [font] :as opts :or {font :default}}]
-  (let [font  (get-in platform-specific [:fonts (keyword font)])
+  (let [font  (get-in platform/platform-specific [:fonts (keyword font)])
         style (get opts style-key)]
     (-> opts
         (dissoc :font)
@@ -79,9 +79,9 @@
 
 (defn text
   ([t]
-   (r/as-element [text-class t]))
+   (reagent/as-element [text-class t]))
   ([{:keys [uppercase?] :as opts} t & ts]
-   (r/as-element
+   (reagent/as-element
      (let [ts (cond->> (conj ts t)
                        uppercase? (map #(when % (string/upper-case %))))]
        (vec (concat
@@ -91,18 +91,18 @@
 
 (defn text-input [{:keys [font style] :as opts
                    :or   {font :default}} text]
-  (let [font (get-in platform-specific [:fonts (keyword font)])]
+  (let [font (get-in platform/platform-specific [:fonts (keyword font)])]
     [text-input-class (merge
-                       {:underline-color-android :transparent
-                        :placeholder-text-color  st/text2-color
-                        :placeholder             (i18n/label :t/type-a-message)
-                        :value                   text}
-                       (-> opts
-                           (dissoc :font)
-                           (assoc :style (merge style font))))]))
+                        {:underline-color-android :transparent
+                         :placeholder-text-color  components.styles/text2-color
+                         :placeholder             (i18n/label :t/type-a-message)
+                         :value                   text}
+                        (-> opts
+                            (dissoc :font)
+                            (assoc :style (merge style font))))]))
 
 (defn icon
-  ([n] (icon n st/icon-default))
+  ([n] (icon n components.styles/icon-default))
   ([n style]
    [image {:source     {:uri (keyword (str "icon_" (name n)))}
            :resizeMode "contain"
@@ -116,13 +116,13 @@
 (defn get-dimensions [name]
   (js->clj (.get dimensions name) :keywordize-keys true))
 
-(def gradient (adapt-class (.-default rn-dependencies/linear-gradient)))
+(def gradient (adapt-class (.-default js-dependencies/linear-gradient)))
 
 (defn linear-gradient [props]
   [gradient props])
 
 (defn list-item [component]
-  (r/as-element component))
+  (reagent/as-element component))
 
 (defn picker
   ([{:keys [style item-style selected on-change]} items]
@@ -134,12 +134,12 @@
 
 ;; Image picker
 
-(def image-picker-class rn-dependencies/image-crop-picker)
+(def image-picker-class js-dependencies/image-crop-picker)
 
 (defn show-access-error [o]
   (when (= "ERROR_PICKER_UNAUTHORIZED_KEY" (aget o "code")) ; Do not show error when user cancel selection
-    (u/show-popup (i18n/label :t/error)
-                  (i18n/label :t/photos-access-error))))
+    (utils/show-popup (i18n/label :t/error)
+                      (i18n/label :t/photos-access-error))))
 
 (defn show-image-picker [images-fn]
   (let [image-picker (.-default image-picker-class)]
@@ -151,40 +151,40 @@
 ;; Clipboard
 
 (def sharing
-  (.-Share rn-dependencies/react-native))
+  (.-Share js-dependencies/react-native))
 
 (defn copy-to-clipboard [text]
-  (.setString (.-Clipboard rn-dependencies/react-native) text))
+  (.setString (.-Clipboard js-dependencies/react-native) text))
 
 (defn get-from-clipboard [clbk]
-  (let [clipboard-contents (.getString (.-Clipboard rn-dependencies/react-native))]
+  (let [clipboard-contents (.getString (.-Clipboard js-dependencies/react-native))]
     (.then clipboard-contents #(clbk %))))
 
 
 ;; Emoji
 
-(def emoji-picker-class rn-dependencies/emoji-picker)
+(def emoji-picker-class js-dependencies/emoji-picker)
 
 (def emoji-picker
   (let [emoji-picker (.-default emoji-picker-class)]
-    (r/adapt-react-class emoji-picker)))
+    (reagent/adapt-react-class emoji-picker)))
 
 ;; Autolink
 
-(def autolink-class (r/adapt-react-class (.-default rn-dependencies/autolink)))
+(def autolink-class (reagent/adapt-react-class (.-default js-dependencies/autolink)))
 
 (defn autolink [opts]
-  (r/as-element
+  (reagent/as-element
    [autolink-class (add-font-style :style opts)]))
 
 ;; HTTP Bridge
 
-(def http-bridge rn-dependencies/http-bridge)
+(def http-bridge js-dependencies/http-bridge)
 
 ;; KeyboardAvoidingView
 
 (defn keyboard-avoiding-view [props & children]
-  (let [view-element (if ios?
+  (let [view-element (if platform/ios?
                        [keyboard-avoiding-view-class (merge {:behavior :padding} props)]
                        [view props])]
     (vec (concat view-element children))))
@@ -192,7 +192,7 @@
 (views/defview with-activity-indicator
   [{:keys [timeout style enabled? preview]} comp]
   (views/letsubs
-    [loading (r/atom true)]
+    [loading (reagent/atom true)]
     {:component-did-mount (fn []
                             (if (or (nil? timeout)
                                     (> 100 timeout))

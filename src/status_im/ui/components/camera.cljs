@@ -1,15 +1,15 @@
 (ns status-im.ui.components.camera
-  (:require [reagent.core :as r]
-            [clojure.walk :refer [keywordize-keys]]
+  (:require [reagent.core :as reagent]
+            [clojure.walk :as walk]
             [status-im.utils.platform :as platform]
-            [status-im.react-native.js-dependencies :as rn-dependecies]))
+            [status-im.react-native.js-dependencies :as js-dependecies]))
 
-(def default-camera (.-default rn-dependecies/camera))
+(def default-camera (.-default js-dependecies/camera))
 
 (defn constants [t]
-  (-> (aget rn-dependecies/camera "constants" t)
+  (-> (aget js-dependecies/camera "constants" t)
       (js->clj)
-      (keywordize-keys)))
+      (walk/keywordize-keys)))
 
 (def aspects (constants "Aspect"))
 (def capture-targets (constants "CaptureTarget"))
@@ -26,7 +26,7 @@
           (.catch #(callback false)))))
 
 (defn camera [props]
-  (r/create-element default-camera (clj->js (merge {:inverted true} props))))
+  (reagent/create-element default-camera (clj->js (merge {:inverted true} props))))
 
 (defn get-qr-code-data [code]
   (.-data code))
