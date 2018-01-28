@@ -85,7 +85,7 @@
      {:web3                        web3
       :identity                    public-key
       :groups                      groups
-      :callback                    #(events-buffer/dispatch [:incoming-message %1 %2])
+      :callback                    #(re-frame/dispatch [:incoming-message %1 %2])
       :ack-not-received-s-interval 125
       :default-ttl                 120
       :send-online-s-interval      180

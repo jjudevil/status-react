@@ -21,7 +21,7 @@
             [taoensso.timbre :as log]))
 
 (defn prepare-command
-  [identity chat-id clock-value
+  [identity chat-id last-clock-value
    {request-params  :params
     request-command :command
     :keys           [prefill prefillBotDb]
@@ -57,7 +57,7 @@
      :to-message   to-message
      :type         (:type command)
      :has-handler  (:has-handler command)
-     :clock-value  (clocks/send clock-value)
+     :clock-value  (clocks/send last-clock-value)
      :show?        true}))
 
 (defn console-command? [chat-id command-name]
@@ -93,13 +93,13 @@
                              :as   content} :command
                             chat-id         :chat-id
                             :as             params}]]
-      (let [clock-value   (messages/get-last-clock-value chat-id)
-            request       (:request handler-data)
-            hidden-params (->> (:params command)
-                               (filter :hidden)
-                               (map :name))
-            command'      (-> (prepare-command current-public-key chat-id clock-value request content)
-                              (assoc :message-type (message-type (get chats chat-id))))]
+      (let [request       (:request handler-data)
+            last-clock-value (get-in chats [chat-id :last-clock-value])
+            hidden-params    (->> (:params command)
+                                  (filter :hidden)
+                                  (map :name))
+            command'         (-> (prepare-command current-public-key chat-id last-clock-value request content)
+                                 (assoc :message-type (message-type (get chats chat-id))))]
         (dispatch [:update-message-overhead! chat-id network-status])
         (dispatch [:set-chat-ui-props {:sending-in-progress? false}])
         (dispatch [::send-command! add-to-chat-id (assoc params :command command') hidden-params])
@@ -118,8 +118,8 @@
 (register-handler ::add-command
   (after (fn [_ [_ _ {:keys [handler]}]]
            (when handler (handler))))
-  (fn [db [_ add-to-chat-id {:keys [chat-id command]}]]
-    (cu/add-message-to-db db add-to-chat-id chat-id command)))
+  (fn [db [_ chat-id {:keys [command]}]]
+    (cu/add-message-to-db db chat-id command)))
 
 (register-handler
   ::save-command!

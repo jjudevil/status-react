@@ -14,8 +14,7 @@
 
 (def receive-interceptors
   [(re-frame/inject-cofx :message-exists?)
-   (re-frame/inject-cofx :pop-up-chat?)
-   (re-frame/inject-cofx :get-last-clock-value)
+   (re-frame/inject-cofx :pop-up-chat?) 
    (re-frame/inject-cofx :random-id)
    (re-frame/inject-cofx :get-stored-chat)
    re-frame/trim-v])
@@ -31,15 +30,14 @@
 
 (defn- add-message-to-db
   [db {:keys [message-id] :as message} chat-id current-chat?]
-  (cond-> (chat-utils/add-message-to-db db chat-id chat-id message (:new? message))
+  (cond-> (chat-utils/add-message-to-db db chat-id message (:new? message))
     (not current-chat?)
     (update-in [:chats chat-id :unviewed-messages] (fnil conj #{}) message-id)))
 
 (defn receive
-  [{:keys [db message-exists? pop-up-chat? get-last-clock-value now] :as cofx}
+  [{:keys [db message-exists? pop-up-chat? now] :as cofx}
    {:keys [from group-id chat-id content-type content message-id timestamp clock-value]
-    :as   message
-    :or   {clock-value 0}}]
+    :as   message}]
   (let [{:keys [current-chat-id view-id
                 access-scope->commands-responses] :contacts/keys [contacts]} db
         {:keys [public-key] :as current-account} (get-current-account db)
@@ -58,24 +56,20 @@
                                (chat-model/upsert-chat cofx {:chat-id chat-identifier
                                                              :group-chat (boolean group-id)})
                                (chat-model/add-chat cofx chat-identifier))
+            chat             (get-in fx [:db :chats chat-identifier])
             command-request? (= content-type constants/content-type-command-request)
             command          (:command content)
             enriched-message (cond-> (assoc message
                                             :chat-id     chat-identifier
                                             :timestamp   (or timestamp now)
                                             :show?       true
-                                            :clock-value (clocks/receive
-                                                          clock-value
-                                                          (get-last-clock-value chat-identifier)))
+                                            :clock-value (clocks/receive clock-value (:last-clock-value chat)))
                                public-key
                                (assoc :user-statuses {public-key (if current-chat? :seen :received)})
                                (and command command-request?)
                                (assoc-in [:content :content-command-ref]
                                          (lookup-response-ref access-scope->commands-responses
-                                                              current-account
-                                                              (get-in fx [:db :chats chat-identifier])
-                                                              contacts
-                                                              command)))]
+                                                              current-account chat contacts command)))]
         (cond-> (-> fx
                     (update :db add-message-to-db enriched-message chat-identifier current-chat?)
                     (assoc :save-message (dissoc enriched-message :new?)))

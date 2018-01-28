@@ -177,6 +177,7 @@
                   :chat/public-group-topic
                   :chat/confirmation-code-sms-listener
                   :chat/messages
+                  :chat/last-clock-value
                   :chat/loaded-chats
                   :chat/bot-db
                   :chat/geolocation

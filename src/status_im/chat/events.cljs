@@ -55,6 +55,11 @@
   (fn [cofx _]
     (assoc cofx :get-stored-chat chats-store/get-by-id)))
 
+(re-frame/reg-cofx
+  :get-last-clock-value
+  (fn [cofx]
+    (assoc cofx :get-last-clock-value messages-store/get-last-clock-value)))
+
 ;;;; Effects
 
 (def ^:private update-message-queue (async/chan 100))
@@ -167,12 +172,14 @@
   [(re-frame/inject-cofx :all-stored-chats)
    (re-frame/inject-cofx :get-stored-messages)
    (re-frame/inject-cofx :stored-unviewed-messages)
-   (re-frame/inject-cofx :get-stored-unanswered-requests)]
+   (re-frame/inject-cofx :get-stored-unanswered-requests)
+   (re-frame/inject-cofx :get-last-clock-value)]
   (fn [{:keys [db
                all-stored-chats
                stored-unanswered-requests
                get-stored-messages
-               stored-unviewed-messages]} _]
+               stored-unviewed-messages
+               get-last-clock-value]} _]
     (let [{:accounts/keys [account-creation?]} db
           load-default-contacts-event [:load-default-contacts!]]
       (if account-creation?
@@ -185,9 +192,10 @@
               chats (reduce (fn [acc {:keys [chat-id] :as chat}]
                               (assoc acc chat-id
                                      (assoc chat
+                                            :last-clock-value  (get-last-clock-value chat-id)
                                             :unviewed-messages (get stored-unviewed-messages chat-id)
-                                            :requests (get chat->message-id->request chat-id)
-                                            :messages (index-messages (get-stored-messages chat-id)))))
+                                            :requests          (get chat->message-id->request chat-id)
+                                            :messages          (index-messages (get-stored-messages chat-id)))))
                             {}
                             all-stored-chats)]
           (-> db

@@ -2,12 +2,14 @@
   (:require [status-im.chat.constants :as chat.constants]))
 
 (defn add-message-to-db
-  ([db add-to-chat-id chat-id message] (add-message-to-db db add-to-chat-id chat-id message true))
-  ([db add-to-chat-id chat-id {:keys [message-id] :as message} new?]
+  ([db chat-id message] (add-message-to-db db chat-id message true))
+  ([db chat-id {:keys [message-id clock-value] :as message} new?]
    (let [prepared-message (assoc message
                                  :chat-id chat-id
                                  :new? (if (nil? new?) true new?))]
-     (update-in db [:chats add-to-chat-id :messages] assoc message-id prepared-message))))
+     (-> db
+         (update-in [:chats chat-id :messages] assoc message-id prepared-message)
+         (update-in [:chats chat-id :last-clock-value] (fnil max 0) clock-value)))))
 
 (defn message-seen-by? [message user-pk]
   (= :seen (get-in message [:user-statuses user-pk])))

@@ -21,11 +21,6 @@
   (fn [cofx]
     (assoc cofx :message-exists? messages-store/exists?)))
 
-(re-frame/reg-cofx
-  :get-last-clock-value
-  (fn [cofx]
-    (assoc cofx :get-last-clock-value messages-store/get-last-clock-value)))
-
 ;;;; FX
 
 (handlers/register-handler-fx

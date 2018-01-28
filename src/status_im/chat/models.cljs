@@ -20,7 +20,7 @@
             :color      styles/default-chat-color
             :group-chat false
             :is-active  true
-            :timestamp  now
+            :timestamp  now 
             :contacts   [{:identity chat-id}]}
            chat-props)))
 

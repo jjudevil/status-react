@@ -15,6 +15,7 @@
 (s/def :chat/public-group-topic (s/nilable string?))
 (s/def :chat/confirmation-code-sms-listener (s/nilable any?))     ; .addListener result object
 (s/def :chat/messages (s/nilable map?))                           ; messages indexed by message-id
+(s/def :chat/last-clock-value (s/nilable number?))                ; last logical clock value of messages in chat
 (s/def :chat/loaded-chats (s/nilable seq?))
 (s/def :chat/bot-db (s/nilable map?))
 (s/def :chat/geolocation (s/nilable map?))
