@@ -39,9 +39,9 @@
 ;; this shouldn't need a specific function like `upsert-chat` which
 ;; is wrongfuly named
 (defn update-chat
-  "Updates chat properties, if chat is not present in db, creates a default new one"
-  [{:keys [db get-stored-chat] :as cofx} {:keys [chat-id] :as chat}]
-  (let [chat (merge (or (get-stored-chat chat-id)
+  "Updates chat properties, if chat is not present in app-db, creates a default new one"
+  [{:keys [db] :as cofx} {:keys [chat-id] :as chat}]
+  (let [chat (merge (or (get-in db [:chats chat-id])
                         (create-new-chat cofx chat-id {}))
                     chat)]
     {:db        (cond-> db

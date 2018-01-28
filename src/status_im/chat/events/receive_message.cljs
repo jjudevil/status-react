@@ -7,21 +7,7 @@
             [status-im.chat.events.commands :as commands-events]
             [status-im.chat.models.message :as message-model]))
 
-;;;; Coeffects
-
-(re-frame/reg-cofx
-  :pop-up-chat?
-  (fn [cofx]
-    (assoc cofx :pop-up-chat? (fn [chat-id]
-                                (or (not (chat-store/exists? chat-id))
-                                    (chat-store/is-active? chat-id))))))
-
-(re-frame/reg-cofx
-  :message-exists?
-  (fn [cofx]
-    (assoc cofx :message-exists? messages-store/exists?)))
-
-;;;; FX
+;;;; Handlers
 
 (handlers/register-handler-fx
   ::received-message
@@ -32,26 +18,30 @@
 (handlers/register-handler-fx
   :chat-received-message/add
   message-model/receive-interceptors
-  (fn [{:keys [db] :as cofx} [{:keys [content] :as message}]]
-    (if (:command content)
-      ;; we are dealing with received command message, we can't add it right away,
-      ;; we first need to fetch short-preview + preview and add it only after we already have those.
-      ;; note that `request-command-message-data` implicitly wait till jail is ready and
-      ;; calls are made only after that
-      (commands-events/request-command-message-data
-       db message
-       {:data-type             :short-preview
-        :proceed-event-creator (fn [short-preview]
-                                 [:request-command-message-data
-                                  message
-                                  {:data-type             :preview
-                                   :proceed-event-creator (fn [preview]
-                                                            [::received-message
-                                                             (update message :content merge
-                                                                     {:short-preview short-preview
-                                                                      :preview       preview})])}])})
-      ;; regular non command message, we can add it right away
-      (message-model/receive cofx message))))
+  (fn [{:keys [db] :as cofx} [{:keys [content group-id chat-id from message-id] :as message}]]
+    (let [chat-identifier (or group-id chat-id from)]
+      (when (and (message-model/add-to-chat? db chat-identifier group-id)
+                 (not (message-model/message-exists? db chat-identifier message-id))
+                 (not= from (:current-public-key db)))
+        (if (:command content)
+          ;; we are dealing with received command message, we can't add it right away,
+          ;; we first need to fetch short-preview + preview and add it only after we already have those.
+          ;; note that `request-command-message-data` implicitly wait till jail is ready and
+          ;; calls are made only after that
+          (commands-events/request-command-message-data
+           db message
+           {:data-type             :short-preview
+            :proceed-event-creator (fn [short-preview]
+                                     [:request-command-message-data
+                                      message
+                                      {:data-type             :preview
+                                       :proceed-event-creator (fn [preview]
+                                                                [::received-message
+                                                                 (update message :content merge
+                                                                         {:short-preview short-preview
+                                                                          :preview       preview})])}])})
+          ;; regular non command message, we can add it right away
+          (message-model/receive cofx message))))))
 
 ;; TODO janherich: get rid of this special case once they hacky app start-up sequence is refactored
 (handlers/register-handler-fx

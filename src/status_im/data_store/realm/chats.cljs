@@ -20,6 +20,14 @@
       (realm/sorted :timestamp :desc)
       realm/js-object->clj))
 
+(defn get-inactive-ids
+  []
+  (-> (realm/get-by-field @realm/account-realm :chat :is-active false)
+      (.map (fn [chat _ _]
+              (aget chat "chat-id")))
+      realm/js-object->clj
+      set))
+
 (defn- groups
   [active?]
   (realm/filtered (get-all)

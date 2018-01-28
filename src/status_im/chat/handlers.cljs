@@ -18,7 +18,9 @@
 
 (defn remove-chat
   [db [_ chat-id]]
-  (update db :chats dissoc chat-id))
+  (-> db
+      (update :chats dissoc chat-id)
+      (update :deleted-chats (fnil conj #{}) chat-id)))
 
 (reg-fx
   ::delete-messages

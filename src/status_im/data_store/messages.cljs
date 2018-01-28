@@ -16,9 +16,6 @@
   {:outgoing       false
    :to             nil})
 
-(defn exists? [message-id]
-  (data-store/exists? message-id))
-
 (defn get-by-id
   [message-id]
   (data-store/get-by-id message-id))
@@ -32,6 +29,10 @@
                 (if (command-type? content-type)
                   (update message :content reader/read-string)
                   message))))))
+
+(defn get-stored-message-ids
+  []
+  (data-store/get-stored-message-ids))
 
 (defn get-log-messages
   [chat-id]

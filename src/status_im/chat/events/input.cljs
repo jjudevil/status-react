@@ -474,7 +474,7 @@
 
 (handlers/register-handler-fx
   :send-current-message
-  [(re-frame/inject-cofx :random-id) (re-frame/inject-cofx :get-stored-chat)]
+  [(re-frame/inject-cofx :random-id)]
   (fn [{{:keys [current-chat-id current-public-key] :as db} :db message-id :random-id current-time :now
         :as cofx} _]
     (when-not (get-in db [:chat-ui-props current-chat-id :sending-in-progress?])

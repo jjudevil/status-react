@@ -10,6 +10,10 @@
   []
   (map normalize-contacts (data-store/get-all-active)))
 
+(defn get-inactive-ids
+  []
+  (data-store/get-inactive-ids))
+
 (defn get-by-id
   [id]
   (data-store/get-by-id id))
