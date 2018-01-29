@@ -5,8 +5,7 @@
             [status-im.protocol.web3.utils :as u]
             [status-im.protocol.encryption :as e]
             [taoensso.timbre :as log]
-            [status-im.utils.hex :as i]
-            [status-im.utils.events-buffer :as events-buffer]))
+            [status-im.utils.hex :as i]))
 
 (defn empty-public-key? [public-key]
   (or (= "0x0" public-key)

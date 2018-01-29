@@ -5,6 +5,7 @@
             [taoensso.timbre :as log]
             [status-im.utils.handlers :as handlers]
             [status-im.utils.gfycat.core :as gfycat]
+            [status-im.utils.async :as async-utils]
             [status-im.chat.models :as model]
             [status-im.chat.console :as console-chat]
             [status-im.chat.constants :as chat-const]
@@ -68,27 +69,30 @@
 
 ;;;; Effects
 
-(def ^:private update-message-queue (async/chan 100))
-
-(async/go-loop [message (async/<! update-message-queue)]
-  (when message
-    (messages-store/update-message message)
-    (recur (async/<! update-message-queue))))
+(def ^:private realm-queue (async-utils/task-queue 200))
 
 (re-frame/reg-fx
   :update-message
   (fn [message]
-    (async/put! update-message-queue message)))
+    (async/put! realm-queue #(messages-store/update-message message))))
 
 (re-frame/reg-fx
   :save-message
   (fn [message]
-    (messages-store/save message)))
+    (async/put! realm-queue #(messages-store/save message))))
+
+(re-frame/reg-fx
+  :update-message-overhead
+  (fn [{:keys [chat-id offline?]}]
+    (let [update-fn (if offline?
+                      chats-store/inc-message-overhead
+                      chats-store/reset-message-overhead)]
+      (async/put! realm-queue #(update-fn chat-id)))))
 
 (re-frame/reg-fx
   :save-chat
   (fn [chat]
-    (chats-store/save chat)))
+    (async/put! realm-queue #(chats-store/save chat))))
 
 (re-frame/reg-fx
   :save-all-contacts

@@ -96,13 +96,11 @@
                :keypair  keypair
                :callback #(dispatch [:incoming-message %1 %2])}))))))))
 
-(register-handler
-  :update-message-overhead!
-  (u/side-effect!
-   (fn [_ [_ chat-id network-status]]
-     (if (= network-status :offline)
-       (chats/inc-message-overhead chat-id)
-       (chats/reset-message-overhead chat-id)))))
+(register-handler-fx
+  :update-message-overhead! 
+  (fn [_ [_ chat-id network-status]]
+    {:update-message-overhead {:chat-id  chat-id
+                               :offline? (= network-status :offline)}}))
 
 (reg-fx
   ::save-public-chat

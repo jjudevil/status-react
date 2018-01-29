@@ -95,9 +95,8 @@
                   (assoc :message-type :group-user-message))]
     (as-> (chat.models/upsert-chat cofx {:chat-id chat-id})
         fx (merge fx
-                  {:db           (chat.utils/add-message-to-db (:db fx) chat-id message)
-                   :save-message message
-                   ;; TODO janherich - get rid of this, there is absolutely no reason why it can't be just
-                   ;; plain app-db inc + chat update
-                   :dispatch     [:update-message-overhead! chat-id (:network-status db)]}
+                  {:db                      (chat.utils/add-message-to-db (:db fx) chat-id message)
+                   :save-message            message 
+                   :update-message-overhead {:chat-id  chat-id
+                                             :offline? (= :offline (:network-status db))}}
                   (send-message (:db fx) message)))))
