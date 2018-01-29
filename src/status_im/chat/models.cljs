@@ -41,7 +41,7 @@
 (defn update-chat
   "Updates chat properties, if chat is not present in app-db, creates a default new one"
   [{:keys [db] :as cofx} {:keys [chat-id] :as chat}]
-  (let [chat (merge (or (get-in db [:chats chat-id])
+  (let [chat (merge (or (-> db (get-in [:chats chat-id]) (dissoc :contacts))
                         (create-new-chat cofx chat-id {}))
                     chat)]
     {:db        (cond-> db
