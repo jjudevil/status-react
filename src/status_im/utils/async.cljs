@@ -26,9 +26,11 @@
 (defn task-queue
   "Creates `core.async` channel which will process 0 arg functions put there in serial fashon.
   Takes the same argument/s as `core.async/chan`, those arguments will be delegated to the
-  channel constructor."
-  [& arg]
-  (let [task-queue (apply async/chan arg)]
+  channel constructor.
+  Returns task-queue where tasks represented by 0 arg task functions can be put for processing."
+  [& args]
+  (let [task-queue (apply async/chan args)]
     (async/go-loop [task-fn (async/<! task-queue)]
       (task-fn)
-      (recur (async/<! task-queue)))))
+      (recur (async/<! task-queue)))
+    task-queue))
