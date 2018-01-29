@@ -1,5 +1,5 @@
 (ns status-im.chat.events
-  (:require [clojure.set :as s]
+  (:require [clojure.set :as set]
             [cljs.core.async :as async]
             [re-frame.core :as re-frame]
             [taoensso.timbre :as log]
@@ -212,8 +212,8 @@
                                               :unviewed-messages      (get stored-unviewed-messages chat-id)
                                               :requests               (get chat->message-id->request chat-id)
                                               :messages               chat-messages
-                                              :not-loaded-message-ids (s/difference (get stored-message-ids chat-id)
-                                                                                    (-> chat-messages keys set))))))
+                                              :not-loaded-message-ids (set/difference (get stored-message-ids chat-id)
+                                                                                      (-> chat-messages keys set))))))
                             {}
                             all-stored-chats)]
           (-> db
