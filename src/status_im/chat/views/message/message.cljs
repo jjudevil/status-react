@@ -275,7 +275,8 @@
       (reagent/create-class
         {:component-did-update
          on-update
-         :display-name "message-container"
+         :display-name
+         "message-container"
          :reagent-render
          (fn [_ & children]
            @layout-height
@@ -289,7 +290,8 @@
 
 (defn chat-message [{:keys [outgoing message-id chat-id from current-public-key] :as message}]
   (reagent/create-class
-    {:display-name "chat-message"
+    {:display-name
+     "chat-message"
      :component-did-mount
      ;; send `:seen` signal when we have signed-in user, message not from us and we didn't sent it already
      #(when (and current-public-key message-id chat-id (not outgoing)
@@ -301,17 +303,12 @@
      :reagent-render
      (fn [{:keys [outgoing group-chat content-type content] :as message}]
        [message-container message
-        [react/touchable-highlight {:on-press #(when platform/ios?
-                                                 (re-frame/dispatch [:set-chat-ui-props
-                                                                     {:show-emoji? false}])
-                                                 (react/dismiss-keyboard!))
-                                    :on-long-press #(cond (= content-type constants/text-content-type)
-                                                          (list-selection/share content (i18n/label :t/message))
-                                                          (and (= content-type constants/content-type-command)
-                                                               (= "location" (:content-command content)))
-                                                          (let [address (get-in content [:params :address])
-                                                                [location lat long] (string/split address #"&amp;")]
-                                                            (list-selection/share-or-open-map location lat long)))}
+        [react/touchable-highlight {:on-press      #(when platform/ios?
+                                                      (re-frame/dispatch [:set-chat-ui-props
+                                                                          {:show-emoji? false}])
+                                                      (react/dismiss-keyboard!))
+                                    :on-long-press #(when (= content-type constants/text-content-type)
+                                                      (list-selection/share content (i18n/label :t/message)))}
          [react/view
           (let [incoming-group (and group-chat (not outgoing))]
             [message-content message-body (merge message
