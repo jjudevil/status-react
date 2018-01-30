@@ -2,8 +2,7 @@
   (:require [re-frame.core :refer [reg-sub subscribe]]
             [status-im.constants :as constants]
             [status-im.chat.models.input :as input-model]
-            [status-im.chat.models.commands :as commands-model]
-            [status-im.chat.utils :as chat-utils]
+            [status-im.chat.models.commands :as commands-model] 
             [status-im.chat.views.input.utils :as input-utils]
             [status-im.commands.utils :as commands-utils]
             [status-im.utils.datetime :as time]
@@ -161,7 +160,7 @@
 (defn- available-commands-responses [[commands-responses {:keys [input-text]}]]
   (->> commands-responses
        map->sorted-seq
-       (filter #(string/includes? (chat-utils/command-name %) (or input-text "")))))
+       (filter #(string/includes? (commands-model/command-name %) (or input-text "")))))
 
 (reg-sub
   :get-available-commands

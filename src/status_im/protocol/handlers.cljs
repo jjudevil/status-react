@@ -14,7 +14,7 @@
             [status-im.utils.async :as async-utils]
             [status-im.protocol.message-cache :as cache]
             [status-im.protocol.listeners :as listeners]
-            [status-im.chat.utils :as chat.utils]
+            [status-im.chat.models.message :as models.message]
             [status-im.protocol.web3.inbox :as inbox]
             [status-im.protocol.web3.keys :as web3.keys]
             [status-im.utils.datetime :as datetime] 
@@ -461,7 +461,7 @@
       (when (and message
                  (get-in db [:chats chat-identifier])
                  (not= status (get-in message [:user-statuses from-id]))
-                 (not (chat.utils/message-seen-by? message from-id)))
+                 (not (models.message/message-seen-by? message from-id)))
         (let [statuses (assoc (:user-statuses message) from-id status)]
           (cond-> {:update-message {:message-id    message-identifier
                                     :user-statuses statuses}} 

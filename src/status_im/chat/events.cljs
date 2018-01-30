@@ -153,10 +153,10 @@
                            (> const/default-number-of-messages (count new-messages))))}))))
 
 (handlers/register-handler-db
-  :set-message-shown
+  :message-appeared
   [re-frame/trim-v]
   (fn [db [{:keys [chat-id message-id]}]]
-    (update-in db [:chats chat-id :messages message-id] assoc :new? false)))
+    (update-in db [:chats chat-id :messages message-id] assoc :appearing? false)))
 
 (defn init-console-chat
   [{:keys [chats] :accounts/keys [current-account-id] :as db}]

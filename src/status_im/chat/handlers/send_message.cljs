@@ -1,9 +1,8 @@
 (ns status-im.chat.handlers.send-message
   (:require [clojure.string :as s]
-            [re-frame.core :refer [after dispatch path]]
-            [status-im.chat.models.commands :as commands-model]
-            [status-im.chat.events.console :as console]
-            [status-im.chat.utils :as cu]
+            [re-frame.core :refer [after dispatch path]] 
+            [status-im.chat.models.message :as models.message]
+            [status-im.chat.events.console :as console] 
             [status-im.constants :refer [console-chat-id
                                          text-content-type
                                          content-type-log-message
@@ -119,7 +118,7 @@
   (after (fn [_ [_ _ {:keys [handler]}]]
            (when handler (handler))))
   (fn [db [_ chat-id {:keys [command]}]]
-    (cu/add-message-to-db db chat-id command)))
+    (models.message/add-message-to-db db chat-id command true)))
 
 (register-handler
   ::save-command!

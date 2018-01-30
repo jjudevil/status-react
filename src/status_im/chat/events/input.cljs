@@ -2,10 +2,10 @@
   (:require [clojure.string :as string]
             [re-frame.core :as re-frame]
             [taoensso.timbre :as log]
-            [status-im.chat.constants :as constants]
-            [status-im.chat.utils :as chat-utils]
+            [status-im.chat.constants :as constants] 
             [status-im.chat.models :as model]
             [status-im.chat.models.input :as input-model]
+            [status-im.chat.models.commands :as commands-model]
             [status-im.chat.events.commands :as commands-events]
             [status-im.chat.events.animation :as animation-events]
             [status-im.chat.events.send-message :as send-message-events]
@@ -192,7 +192,7 @@
                                           :validation-messages nil
                                           :prev-command        name})
                 (set-chat-input-metadata metadata)
-                (set-chat-input-text (str (chat-utils/command-name command)
+                (set-chat-input-text (str (commands-model/command-name command)
                                           constants/spacing-char
                                           (when-not sequential-params
                                             (input-model/join-command-args prefill)))))

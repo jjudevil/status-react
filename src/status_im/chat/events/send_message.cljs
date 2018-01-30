@@ -4,8 +4,8 @@
             [status-im.constants :as constants]
             [status-im.utils.clocks :as clocks]
             [status-im.utils.config :as config]
-            [status-im.chat.models :as chat.models]
-            [status-im.chat.utils :as chat.utils]
+            [status-im.chat.models :as models]
+            [status-im.chat.models.message :as models.message] 
             [status-im.protocol.core :as protocol]
             [status-im.native-module.core :as status]
             [taoensso.timbre :as log]))
@@ -93,9 +93,9 @@
                   (assoc :message-type :public-group-user-message)
                   (and group-chat (not public?))
                   (assoc :message-type :group-user-message))]
-    (as-> (chat.models/upsert-chat cofx {:chat-id chat-id})
+    (as-> (models/upsert-chat cofx {:chat-id chat-id})
         fx (merge fx
-                  {:db                      (chat.utils/add-message-to-db (:db fx) chat-id message)
+                  {:db                      (models.message/add-message-to-db (:db fx) chat-id message true)
                    :save-message            message 
                    :update-message-overhead {:chat-id  chat-id
                                              :offline? (= :offline (:network-status db))}}
